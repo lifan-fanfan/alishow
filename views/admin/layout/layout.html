@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard &laquo; Admin</title>
+  <link rel="stylesheet" href="/public/assets/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="/public/assets/vendors/font-awesome/css/font-awesome.css">
+  <link rel="stylesheet" href="/public/assets/vendors/nprogress/nprogress.css">
+  <link rel="stylesheet" href="/public/assets/css/admin.css">
+  <script src="/public/assets/vendors/nprogress/nprogress.js"></script>
+  <style>
+    form label.error {
+      color: red !important;
+    }
+
+    form input.error {
+      border: 2px solid red !important;
+    }
+    
+    form input.valid {
+      border: 2px solid green !important;
+    }
+  </style>
+  {{block 'head'}}{{/block}}
+</head>
+<body>
+  <script>NProgress.start()</script>
+
+  <div class="main">
+    {{include '../includes/navbar.html'}}
+    <!-- 这里需要让其他页面去定制 -->
+    {{block 'body'}}{{/block}}
+  </div>
+
+  {{include '../includes/aside.html'}}
+
+  <script src="/public/assets/vendors/jquery/jquery.js"></script>
+  <script src="/public/assets/vendors/bootstrap/js/bootstrap.js"></script>
+  <script>NProgress.done()</script>
+  <script src="/public/assets/vendors/art-template/template-web.js"></script>
+  <script src="/public/assets/vendors/jquery-validation/jquery.validate.js"></script>
+  <script src="/public/assets/vendors/jquery-validation/localization/messages_zh.js"></script>
+  <script>
+    // template('script 节点 id')
+    // 当前页面是由服务端渲染出来的
+    // 服务端先先对当前页面进行模板引擎处理
+    // 服务端处理的时候根本不关心你的内容，只关心模板语法，我要解析替换
+    // 当你的服务端模板引擎语法和客户端模板引擎语法一样的时候，就会产生冲突
+    //    服务端会把客户端的模板字符串页给解析掉
+    //    这就是所谓的前后端模板语法冲突
+    
+    // 修改模板引擎的语法界定符
+    template.defaults.rules[1].test = /{%([@#]?)[ \t]*(\/?)([\w\W]*?)[ \t]*%}/;
+
+    $(document).ajaxError(function( event, jqxhr, settings ) {
+      console.log('event => ', event) // 事件对象
+      console.log('jqxhr => ', jqxhr) // 请求响应对象
+      console.log('settings => ', settings) // 请求相关的配置
+      if (jqxhr.status >= 500) {
+        window.alert('服务端异常，请稍后访问')
+      }
+    })
+
+    $(document)
+    // 当请求开始的时候，调用 NProgress.start() 开始加载进度条
+    .ajaxStart(function () {
+      NProgress.start()
+    })
+    // 当请求停止的时候，调用 NProgress.end() 停止进度条
+    .ajaxStop(function () {
+      NProgress.done()
+    })
+  </script>
+  {{block 'script'}}{{/block}}
+</body>
+</html>

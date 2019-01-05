@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <link rel="stylesheet" href="../node_modules/quill/dist/quill.snow.css">
+</head>
+
+<body>
+  <!-- Create the toolbar container -->
+  <!-- <div id="toolbar">
+    <button class="ql-bold">Bold</button>
+    <button class="ql-italic">Italic</button>
+  </div> -->
+  <!-- Create the editor container -->
+  <div id="editor" style="height: 200px">
+    <h1>hello world</h1>
+    <img src=http://img0.imgtn.bdimg.com/it/u=663921171,2353947159&fm=26&gp=0.jpg"" alt="111">
+  </div>
+  <form enctype="multipart/form-data" id="imgFrom">
+    <!-- this.files[0] 图片列表的第0项，也就是当前选择的图片 -->
+    <input type="file" onchange="updateImg(this.files[0])" id="imgData" style="display: none;">
+  </form>
+  <script src="../node_modules/quill/dist/quill.js"></script>
+  <!-- Initialize Quill editor -->
+  <script>
+  var toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+    ['blockquote', 'code-block'],
+
+    [{ 'header': 1 }, { 'header': 2 }], // custom button values
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'script': 'sub' }, { 'script': 'super' }], // superscript/subscript
+    [{ 'indent': '-1' }, { 'indent': '+1' }], // outdent/indent
+    [{ 'direction': 'rtl' }], // text direction
+
+    [{ 'size': ['small', false, 'large', 'huge'] }], // custom dropdown
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }], // dropdown with defaults from theme
+    [{ 'font': [] }],
+    [{ 'align': [] }],
+
+    ['clean'], // remove formatting button
+    ['image']
+  ];
+  var editor = new Quill('#editor', {
+    // modules: { toolbar: '#toolbar' },
+    modules: {
+      toolbar: toolbarOptions
+    },
+    theme: 'snow',
+    imageUpload: function (image, callback) {
+      console.log(image)
+    }
+  });
+  // Handlers can also be added post initialization
+  var toolbar = editor.getModule('toolbar');
+  toolbar.addHandler('image', function (...args) {
+    document.getElementById('imgData').click()
+  })
+
+  function updateImg(file) {
+    // 1. 构建 FormData 对象并添加 file 文件对象
+    var formData = new FormData()
+    formData.append('img', file)
+    console.log(formData)
+
+    // 2. 发送 Ajax 请求
+    // $.ajax({
+    //   url: "xxxxxxxx",
+    //   type: "POST",
+    //   data: formData,
+    //   processData: false,  // 不处理数据
+    //   contentType: false,   // 不设置内容类型
+    //   success: function (resData) {
+    //     console.log(resData)
+    //   },
+    //   error: function (error) {
+    //     console.log(error)
+    //   }
+    // })
+
+    // 3. 往当前编辑器中的光标位置插入图标
+    //    https://quilljs.com/docs/api/#getselection
+    //    https://quilljs.com/docs/api/#insertembed
+    //    获取当前富文本编辑器中的光标 index
+       var range = editor.getSelection()
+       console.log(range)
+    //    插入图片
+    //    quill.insertEmbed(索引, 'image', '图片地址');
+    //    
+    //    获取内容
+  }
+  </script>
+</body>
+
+</html>

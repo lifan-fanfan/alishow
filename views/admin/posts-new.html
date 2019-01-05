@@ -1,0 +1,185 @@
+{{extend './layout/layout.html'}}
+
+{{block 'head'}}
+<link rel="stylesheet" href="/public/assets/vendors/quill/quill.snow.css">
+{{/block}}
+
+{{block 'body'}}
+<div class="container-fluid">
+  <div class="page-title">
+    <h1>写文章</h1>
+  </div>
+  <!-- 有错误信息时展示 -->
+  <!-- <div class="alert alert-danger">
+    <strong>错误！</strong>发生XXX错误
+  </div> -->
+  <form class="row" id="new_form">
+    <div class="col-md-9">
+      <div class="form-group">
+        <label for="title">标题</label>
+        <input id="title" class="form-control input-lg" name="article_title" type="text" placeholder="文章标题">
+      </div>
+      <div class="form-group">
+        <label for="content">内容</label>
+        <!-- <div id="editor" style="height: 200px"></div> -->
+        <div id="editor"></div>
+        <input type="file" style="display: none;" id="bodyImage">
+        <!-- <textarea id="content" class="form-control input-lg" name="article_body" cols="30" rows="10" placeholder="内容"></textarea> -->
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-group">
+        <label for="slug">别名</label>
+        <input id="slug" class="form-control" name="article_slug" type="text" placeholder="slug">
+        <p class="help-block">https://example.com/post/<strong>slug</strong></p>
+      </div>
+      <div class="form-group">
+        <label for="feature">特色图像</label>
+        <!-- show when image chose -->
+        <img class="help-block thumbnail" style="display: none">
+        <input id="feature" class="form-control" name="article_file" type="file">
+      </div>
+      <div class="form-group">
+        <label for="category">所属分类</label>
+        <select id="category" class="form-control" name="article_cateid">
+          {{each categories }}
+          <option value="{{ $value.cate_id }}">{{ $value.cate_name }}</option>
+          {{/each}}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="created">发布时间</label>
+        <input id="created" class="form-control" name="article_addtime" type="datetime-local">
+      </div>
+      <div class="form-group">
+        <label for="status">状态</label>
+        <select id="status" class="form-control" name="article_status">
+          <option value="草稿">草稿</option>
+          <option value="已发布">已发布</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <button class="btn btn-primary" type="submit" id="submit">保存</button>
+      </div>
+    </div>
+  </form>
+</div>
+{{/block}}
+
+{{block 'script'}}
+<script src="/public/assets/vendors/quill/quill.js"></script>
+<script>
+  // var toolbarOptions = ['bold', 'italic', 'underline', 'strike'];
+  // var toolbarOptions = [['bold', 'italic'], ['link', 'image']];
+  var toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+    ['blockquote', 'code-block'],
+
+    [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+    [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+    [{ 'direction': 'rtl' }],                         // text direction
+
+    [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+    [{ 'font': [] }],
+    [{ 'align': [] }],
+
+    ['clean'],                                         // remove formatting button
+    ['image']
+  ]
+  
+  // 初始化富文本编辑器
+  // 默认会把图片转成 base64 存储在 html 中
+  // 图片除了可以以文件的形式存储，还可以以字符串的形式存储
+  // 网页中如何输出带格式的内容？
+  // 说白了就是 HTML 标签
+  // 所以富文本最终产生就是 HTML 标签
+  // 我们要把编辑的内容 HTML 标签作为文章的内容存储在数据库中
+  // 将来展示的时候就是把内容 HTML 读出来，渲染到页面中
+  var editor = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: toolbarOptions
+    }
+  })
+
+  var toolbar = editor.getModule('toolbar');
+  toolbar.addHandler('image', function () {
+    $('#bodyImage').click()
+  })
+
+  // 当 file 选择的文件发生改变的时候触发
+  // 在这里构建 FormData 表单对象，添加文件数据，请求上传
+  $('#bodyImage').on('change', function () {
+    var formData = new FormData()
+    formData.append('file', $('#bodyImage')[0].files[0])
+    $.ajax({
+      url: '/api/upload',
+      type: 'POST',
+      data: formData,
+      processData: false,  // 不处理数据
+      contentType: false,   // 不设置内容类型
+      success: function (resData) {
+        // 3. 根据响应结果做后续处理
+        var range = editor.getSelection()
+        if (range) {
+          editor.insertEmbed(range.index, 'image', resData.data)
+        }
+      },
+      error: function (err) {
+        console.log(err)
+      }
+    })
+  })
+
+
+  $('#submit').on('click', handleSubmit)
+
+  function handleSubmit() {
+    // 1. 获取表单数据
+    // multipart/form-data
+    var formEl = $('#new_form')
+    var formData = new FormData(formEl.get(0))
+
+    // 添加富文本编辑器的内容到表单数据对象中
+    formData.append('article_body', editor.root.innerHTML)
+
+    /**
+     * 1. 在网页中准备一个隐藏着的 file 类型的 input
+     * 2. 监听 image 的点击事件，在处理函数中，调用文件 input 的 click 
+     *     说白了点击 image 图片就相当于点击了 file 的 input
+     * 3. 监听 file 的 input 的 change 事件
+     *     change 事件会在用户选择了图片发生改变之后被触发
+     * 4. 在 change 事件中，拿到 file 的文件对象
+     *     创建 FormData 对象
+     *     请求图片上传的接口
+     *     获取服务端响应的数据
+     * 5. 服务端需要响应图片的 Web 请求路径，用于设置给 img 的 src 属性
+     * 6. 把服务端响应回来的图片地址，通过编辑器插件暴露的 API，插入 img，设置 src
+     */
+
+    // 2. 表单提交
+    $.ajax({
+      url: '/api/posts/create',
+      type: 'POST',
+      data: formData,
+      processData: false,  // 不处理数据
+      contentType: false,   // 不设置内容类型
+      success: function (resData) {
+        // 3. 根据响应结果做后续处理
+        if (resData.success) {
+          // window.location.href = '/admin/posts'
+        }
+      },
+      error: function (err) {
+        console.log(err)
+      }
+    })
+    return false
+  }
+</script>
+{{/block}}

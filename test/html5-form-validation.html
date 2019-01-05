@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Document</title>
+  <style>
+    /*input:invalid {
+      border: 2px dashed red;
+    }
+
+    input:valid {
+      border: 2px solid black;
+    }*/
+  </style>
+</head>
+
+<body>
+  <form action="" id="form">
+    <div>
+      <input type="text" name="username">
+    </div>
+    <div>
+      <input type="text" name="password">
+    </div>
+    <div>
+      <button type="submit">提交</button>
+    </div>
+  </form>
+  <script src="../public/assets/vendors/jquery/jquery.js"></script>
+  <script src="../public/assets/vendors/jquery-validation/jquery.validate.js"></script>
+  <script src="../public/assets/vendors/jquery-validation/localization/messages_zh.js"></script>
+  <script>
+    $("#form").validate({
+      rules: {
+        username: {
+          required: true,
+          minlength: 2
+        }
+      },
+      messages: {
+        username: {
+          required: '请输入用户名'
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

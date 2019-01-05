@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>Sign in &laquo; Admin</title>
+  <link rel="stylesheet" href="/public/assets/vendors/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="/public/assets/css/admin.css">
+</head>
+<body>
+  <div class="login">
+    <form class="login-wrap" id="login_form">
+      <img class="avatar" src="/public/assets/img/default.png">
+      <!-- 有错误信息时展示 -->
+      <!-- <div class="alert alert-danger">
+        <strong>错误！</strong> 用户名或密码错误！
+      </div> -->
+      <div class="form-group">
+        <label for="email" class="sr-only">邮箱</label>
+        <input id="email" name="admin_email" type="email" class="form-control" placeholder="邮箱" autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password" class="sr-only">密码</label>
+        <input id="password" name="admin_pwd" type="password" class="form-control" placeholder="密码">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">登 录</button>
+    </form>
+  </div>
+  <!-- 
+    页面是我们一个同事写的
+    它当时写这个静态页，自行加了一个顶部进度条加载效果，所说往 jQuery 源文件中增加了那个进度条代码
+    进度条代码依赖了 NProgress 第三方资源
+    而我们当前页面并没有加载这个 NProgress，所以它一调用就报错了
+   -->
+  <script src="/public/assets/vendors/jquery/jquery.js"></script>
+  <script>
+    $('#login_form').on('submit', handleLogin)
+
+    function handleLogin() {
+      // 1. 获取表单数据
+      var formData = $(this).serialize()
+
+      // 2. 发送 Ajax 请求登录
+      $.ajax({
+        url: '/api/users/login',
+        method: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function (resData) {
+          if (resData.success) {
+            window.location.href = '/admin'
+          } else {
+            window.alert(resData.message)
+          }
+        },
+        error: function (err) {
+          console.log(err)
+        }
+      })
+
+      // 3. 根据响应结果做后续处理
+      return false
+    }
+  </script>
+</body>
+</html>
